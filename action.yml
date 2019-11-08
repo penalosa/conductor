@@ -13,6 +13,9 @@ inputs:
   email: # id of input
     description: "CF email"
     required: true
+  build_command:
+    description: "Frontend build command to run"
+    required: true
 
 runs:
   using: "node12"

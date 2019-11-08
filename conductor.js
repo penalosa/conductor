@@ -7,21 +7,24 @@ const zone_id = core.getInput("zone_id");
 const account_id = core.getInput("account_id");
 const api_key = core.getInput("api_key");
 const email = core.getInput("email");
+const build_command = core.getInput("build_command");
 
 const cloudflare = require("./cloudflare");
 
-execSync("rm -rf ./compiled_workers");
-fs.mkdirSync("./compiled_workers");
+execSync("rm -rf ./.workers");
+execSync(build_command);
+
+fs.mkdirSync("./.workers");
 Promise.all(
   fs.readdirSync("./workers").map(async file => {
     const name = file.slice(0, -3);
     let std = execSync(
       `npx @cloudflare/wrangler generate ${name} https://github.com/penalosa/worker-template-simple-serve`,
-      { cwd: "./compiled_workers" }
+      { cwd: "./.workers" }
     );
     console.log(std.toString());
     fs.writeFileSync(
-      `./compiled_workers/${name}/define.js`,
+      `./.workers/${name}/define.js`,
       fs.readFileSync(`workers/${file}`)
     );
     const cwd = execSync("pwd");
@@ -39,7 +42,7 @@ Promise.all(
     );
 
     fs.writeFileSync(
-      `./compiled_workers/${name}/wrangler.toml`,
+      `./.workers/${name}/wrangler.toml`,
       `account_id = "${account_id}"
 name = "${name}"
 type = "webpack"
@@ -54,7 +57,7 @@ ${namespaces
 ]`
     );
     fs.writeFileSync(
-      `./compiled_workers/${name}/bindings.js`,
+      `./.workers/${name}/bindings.js`,
       `module.exports = {
   ${namespaces.map(ns => `${ns.title}: bound_${ns.title},`).join("\n")}
 }`
@@ -72,7 +75,7 @@ ${namespaces
     let stdComm = execSync(
       `CF_API_KEY=${api_key} CF_EMAIL=${email} npx @cloudflare/wrangler publish --env prod`,
       {
-        cwd: `./compiled_workers/${name}`
+        cwd: `./.workers/${name}`
       }
     );
     console.log(stdComm.toString());
