@@ -3,49 +3,13 @@ const YAML = require("yaml");
 const { execSync } = require("child_process");
 const core = require("@actions/core");
 const github = require("@actions/github");
+const zone_id = core.getInput("zone_id");
+const account_id = core.getInput("account_id");
+const api_key = core.getInput("api_key");
+const email = core.getInput("email");
 
-const home = execSync(`echo ~`)
-  .toString()
-  .trim();
-const conductor_manifest = YAML.parse(
-  fs.readFileSync(home + "/.conductor_manifest.yaml", "utf8")
-);
 const cloudflare = require("./cloudflare");
-if (process.argv[2] == "init") {
-  let s = execSync("git init");
-  console.log(s.toString());
-  try {
-    fs.mkdirSync("./workers");
-  } catch (e) {}
-  fs.writeFileSync(
-    "./package.json",
-    `{
-        "name": "${process.argv[3] || "conductor-workers"}",
-        "version": "1.0.0",
-        "description": "",
-        "scripts": {
-          "test": "echo 'Error: no test specified' && exit 1"
-        },
-        "author": "",
-        "license": "MIT"
-      }`
-  );
-  fs.writeFileSync(
-    "./workers/example.js",
-    `module.exports = {
-    get: {
-        '/foo/:bar': async (req, { bar }, { status }) => {
-            return status(200).json({ hello: bar })
-        },
-        '(.*)': async (req, { bar }, { status }) => {
-            return status(404).json({ error: 'Not found' })
-        },
-    },
-}
-`
-  );
-  process.exit(0);
-}
+
 execSync("rm -rf ./compiled_workers");
 fs.mkdirSync("./compiled_workers");
 Promise.all(
@@ -62,21 +26,8 @@ Promise.all(
     );
     const cwd = execSync("pwd");
     const func = require(`${cwd.toString().trim()}/workers/${file}`);
-    let account = Object.keys(conductor_manifest.accounts).find(
-      ai =>
-        !!Object.keys(conductor_manifest.accounts[ai].domains).find(
-          d => d == func.domain
-        )
-    );
-    let account_id;
-    if (account) {
-      account_id = account;
-      account = conductor_manifest.accounts[account];
-    } else {
-      console.error("Account not found for domain", domain);
-      process.exit(1);
-    }
-    const api = cloudflare(account.api_key, account.email);
+
+    const api = cloudflare(api_key, email);
     func.namespaces = func.namespaces || [];
     if (!func.namespaces.includes("logs")) {
       func.namespaces.push("logs");
@@ -95,7 +46,7 @@ type = "webpack"
 
 [env.prod]
 route = "https://${name}.${func.domain}/*"
-zone_id = "${account.domains[func.domain].zone_id}"
+zone_id = "${zone_id}"
 kv-namespaces = [
 ${namespaces
   .map(ns => `{ binding = "bound_${ns.title}", id = "${ns.id}" }`)
@@ -108,9 +59,7 @@ ${namespaces
   ${namespaces.map(ns => `${ns.title}: bound_${ns.title},`).join("\n")}
 }`
     );
-    let hasRecord = await api
-      .zone(account.domains[func.domain].zone_id)
-      .has(`${name}.${func.domain}`);
+    let hasRecord = await api.zone(zone_id).has(`${name}.${func.domain}`);
     if (!hasRecord.result.length) {
       console.error(`DNS record does not exist for ${name}.${func.domain}`);
       console.error(`Creating...`);
@@ -121,11 +70,7 @@ ${namespaces
     }
 
     let stdComm = execSync(
-      `CF_API_KEY=${account.api_key} CF_EMAIL=${account.email} wrangler ${
-        process.argv.slice(2).length
-          ? process.argv.slice(2).join(" ")
-          : "publish"
-      }`,
+      `CF_API_KEY=${api_key} CF_EMAIL=${email} wrangler publish --env prod`,
       {
         cwd: `./compiled_workers/${name}`
       }
