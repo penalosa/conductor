@@ -16,7 +16,7 @@ Promise.all(
   fs.readdirSync("./workers").map(async file => {
     const name = file.slice(0, -3);
     let std = execSync(
-      `npx wrangler generate ${name} https://github.com/penalosa/worker-template-simple-serve`,
+      `npx @cloudflare/wrangler generate ${name} https://github.com/penalosa/worker-template-simple-serve`,
       { cwd: "./compiled_workers" }
     );
     console.log(std.toString());
@@ -70,7 +70,7 @@ ${namespaces
     }
 
     let stdComm = execSync(
-      `CF_API_KEY=${api_key} CF_EMAIL=${email} npx wrangler publish --env prod`,
+      `CF_API_KEY=${api_key} CF_EMAIL=${email} npx @cloudflare/wrangler publish --env prod`,
       {
         cwd: `./compiled_workers/${name}`
       }
