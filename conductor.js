@@ -9,6 +9,7 @@ const api_key = core.getInput("api_key");
 const email = core.getInput("email");
 
 const cloudflare = require("./cloudflare");
+execSync("npm i -g wrangler");
 
 execSync("rm -rf ./compiled_workers");
 fs.mkdirSync("./compiled_workers");
