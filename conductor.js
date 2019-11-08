@@ -9,7 +9,6 @@ const api_key = core.getInput("api_key");
 const email = core.getInput("email");
 
 const cloudflare = require("./cloudflare");
-execSync("npm i -g wrangler");
 
 execSync("rm -rf ./compiled_workers");
 fs.mkdirSync("./compiled_workers");
@@ -17,7 +16,7 @@ Promise.all(
   fs.readdirSync("./workers").map(async file => {
     const name = file.slice(0, -3);
     let std = execSync(
-      `wrangler generate ${name} https://github.com/penalosa/worker-template-simple-serve`,
+      `npx wrangler generate ${name} https://github.com/penalosa/worker-template-simple-serve`,
       { cwd: "./compiled_workers" }
     );
     console.log(std.toString());
@@ -71,7 +70,7 @@ ${namespaces
     }
 
     let stdComm = execSync(
-      `CF_API_KEY=${api_key} CF_EMAIL=${email} wrangler publish --env prod`,
+      `CF_API_KEY=${api_key} CF_EMAIL=${email} npx wrangler publish --env prod`,
       {
         cwd: `./compiled_workers/${name}`
       }
