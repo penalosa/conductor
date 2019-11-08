@@ -12,6 +12,8 @@ const build_command = core.getInput("build_command");
 const cloudflare = require("./cloudflare");
 
 execSync("rm -rf ./.workers");
+execSync("npm install");
+
 execSync(build_command);
 
 fs.mkdirSync("./.workers");
