@@ -27,10 +27,14 @@ try {
         fs.readFileSync(`workers/${file}`)
       );
       const cwd = execSync("pwd");
+
+      const func = require(`${cwd
+        .toString()
+        .trim()}/.workers/${name}/define.js`);
       let wpackageJson = JSON.parse(
         fs.readFileSync(`./.workers/${name}/package.json`)
       );
-      wpackageJson.dependencies = packageJson.dependencies;
+      wpackageJson.dependencies = func.dependencies || {};
 
       fs.writeFileSync(
         `./.workers/${name}/package.json`,
@@ -39,11 +43,15 @@ try {
       let npm0 = execSync(`npm install`, {
         cwd: `./.workers/${name}`
       });
+      fs.writeFileSync(
+        `./.workers/${name}/deps.js`,
+        `module.exports = {
+  ${Object.keys(func.dependencies)
+    .map(k => `"${k}": require(${k})`)
+    .join(",\n")}
+}`
+      );
       console.log(npm0.toString());
-      const func = require(`${cwd
-        .toString()
-        .trim()}/.workers/${name}/define.js`);
-
       const api = cloudflare(api_key, email);
       func.namespaces = func.namespaces || [];
       if (!func.namespaces.includes("logs")) {
