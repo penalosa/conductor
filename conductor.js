@@ -67,7 +67,7 @@ ${namespaces
       await api.zone(zone_id).create(`${name}.${func.domain}`);
       console.log(`Created`);
     }
-    let stdComm = execSync(`npm install`, {
+    execSync(`npm install`, {
       cwd: `./.workers/${name}`
     });
     let stdComm = execSync(
