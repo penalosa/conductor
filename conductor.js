@@ -4,7 +4,9 @@ const { execSync } = require("child_process");
 const core = require("@actions/core");
 const github = require("@actions/github");
 
-const [zone_id, account_id, api_key, email] = core.getInput("cloudflare");
+const [zone_id, account_id, api_key, email] = core
+  .getInput("cloudflare")
+  .split("::");
 
 const cloudflare = require("./cloudflare");
 
