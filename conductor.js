@@ -3,75 +3,12 @@ const YAML = require("yaml");
 const { execSync } = require("child_process");
 const core = require("@actions/core");
 const github = require("@actions/github");
-const zone_id = core.getInput("zone_id");
-const account_id = core.getInput("account_id");
-const api_key = core.getInput("api_key");
-const email = core.getInput("email");
-const domain = core.getInput("domain");
-const bucket = core.getInput("bucket");
+
+const [zone_id, account_id, api_key, email] = core.getInput("cloudflare");
 
 const cloudflare = require("./cloudflare");
 
 execSync("rm -rf ./.workers");
-
-let site = execSync(`npx @cloudflare/wrangler init --site my-static-site`);
-console.log(site.toString());
-
-fs.writeFileSync(
-  `./wrangler.toml`,
-  `name = "static-site"
-type = "webpack"
-account_id = "${account_id}"
-workers_dev = true
-
-[site]
-bucket = "${bucket}"
-entry-point = "workers-site"
-
-[env.prod]
-zone_id = "${zone_id}"
-route = "https://${domain}/*"`
-);
-
-fs.writeFileSync(
-  `./workers-site/index.js`,
-  `import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
-
-addEventListener("fetch", event => {
-  try {
-    event.respondWith(handleEvent(event));
-  } catch (e) {
-    event.respondWith(new Response("Internal Error", { status: 500 }));
-  }
-});
-
-async function handleEvent(event) {
-  try {
-    return await getAssetFromKV(event, {});
-  } catch (e) {
-    // if an error is thrown try to serve the asset at 404.html
-    try {
-      let notFoundResponse = await getAssetFromKV(event, {
-        mapRequestToAsset: req =>
-          new Request(\`\${new URL(req.url).origin}/index.html\`, req)
-      });
-
-      return new Response(notFoundResponse.body, {
-        ...notFoundResponse,
-        status: 404
-      });
-    } catch (e) {}
-
-    return new Response(e.message || e.toString(), { status: 500 });
-  }
-}
-`
-);
-
-let sitePub = execSync(
-  `CF_API_KEY=${api_key} CF_EMAIL=${email} npx @cloudflare/wrangler publish --env prod`
-);
-console.log(sitePub.toString());
 
 fs.mkdirSync("./.workers");
 Promise.all(

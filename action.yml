@@ -1,24 +1,10 @@
 name: "Conductor"
 description: "Deploy Cloudlare workers"
 inputs:
-  zone_id: # id of input
-    description: "CF zone_id"
+  clouflare: # id of input
+    description: "CF"
     required: true
-  account_id: # id of input
-    description: "CF account_id"
-    required: true
-  api_key: # id of input
-    description: "CF api_key"
-    required: true
-  email: # id of input
-    description: "CF email"
-    required: true
-  domain: # id of input
-    description: "CF domain"
-    required: true
-  bucket: # id of input
-    description: "Frontend bucket"
-    required: true
+
 runs:
   using: "node12"
   main: "conductor.js"
