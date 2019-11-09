@@ -7,10 +7,33 @@ const zone_id = core.getInput("zone_id");
 const account_id = core.getInput("account_id");
 const api_key = core.getInput("api_key");
 const email = core.getInput("email");
+const domain = core.getInput("domain");
+const bucket = core.getInput("bucket");
 
 const cloudflare = require("./cloudflare");
 
 execSync("rm -rf ./.workers");
+
+let std = execSync(`npx @cloudflare/wrangler init --site my-static-site`);
+console.log(std.toString());
+
+fs.writeFileSync(
+  `./wrangler.toml`,
+  `name = "static-site"
+type = "webpack"
+account_id = "${account_id}"
+workers_dev = true
+
+[site]
+bucket = "${bucket}"
+entry-point = "workers-site"
+
+[env.prod]
+zone_id = "${zone_id}"
+route = "https://${domain}/*"`
+);
+
+execSync(`npx @cloudflare/wrangler publish --env prod`);
 
 fs.mkdirSync("./.workers");
 Promise.all(

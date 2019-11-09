@@ -13,7 +13,12 @@ inputs:
   email: # id of input
     description: "CF email"
     required: true
-
+  domain: # id of input
+    description: "CF domain"
+    required: true
+  bucket: # id of input
+    description: "Frontend bucket"
+    required: true
 runs:
   using: "node12"
   main: "conductor.js"
