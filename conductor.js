@@ -26,7 +26,20 @@ Promise.all(
       fs.readFileSync(`workers/${file}`)
     );
     const cwd = execSync("pwd");
-    const func = require(`${cwd.toString().trim()}/workers/${file}`);
+    let wpackageJson = JSON.parse(
+      fs.readFileSync(`./.workers/${name}/package.json`)
+    );
+    wpackageJson.dependencies = packageJson.dependencies;
+
+    fs.writeFileSync(
+      `./.workers/${name}/package.json`,
+      JSON.stringify(wpackageJson)
+    );
+    let npm0 = execSync(`npm install`, {
+      cwd: `./.workers/${name}`
+    });
+    console.log(npm0.toString());
+    const func = require(`${cwd.toString().trim()}/.workers/${name}/define.js`);
 
     const api = cloudflare(api_key, email);
     func.namespaces = func.namespaces || [];
@@ -67,19 +80,6 @@ ${namespaces
       await api.zone(zone_id).create(`${name}.${func.domain}`);
       console.log(`Created`);
     }
-    let wpackageJson = JSON.parse(
-      fs.readFileSync(`./.workers/${name}/package.json`)
-    );
-    wpackageJson.dependencies = packageJson.dependencies;
-
-    fs.writeFileSync(
-      `./.workers/${name}/package.json`,
-      JSON.stringify(wpackageJson)
-    );
-    let npm0 = execSync(`npm install`, {
-      cwd: `./.workers/${name}`
-    });
-    console.log(npm0.toString());
 
     let stdComm = execSync(
       `CF_API_KEY=${api_key} CF_EMAIL=${email} npx @cloudflare/wrangler publish --env prod`,
