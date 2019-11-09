@@ -76,9 +76,11 @@ ${namespaces
       `./.workers/${name}/package.json`,
       JSON.stringify(wpackageJson)
     );
-    execSync(`npm install`, {
+    let npm0 = execSync(`npm install`, {
       cwd: `./.workers/${name}`
     });
+    console.log(npm0.toString());
+
     let stdComm = execSync(
       `CF_API_KEY=${api_key} CF_EMAIL=${email} npx @cloudflare/wrangler publish --env prod`,
       {
