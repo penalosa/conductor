@@ -3,7 +3,7 @@ const YAML = require("yaml");
 const { execSync } = require("child_process");
 const core = require("@actions/core");
 const github = require("@actions/github");
-
+const packageJson = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 const [zone_id, account_id, api_key, email] = core
   .getInput("cloudflare")
   .split("::");
@@ -67,6 +67,15 @@ ${namespaces
       await api.zone(zone_id).create(`${name}.${func.domain}`);
       console.log(`Created`);
     }
+    let wpackageJson = JSON.parse(
+      fs.readFileSync(`./.workers/${name}/package.json`)
+    );
+    wpackageJson.dependencies = packageJson.dependencies;
+
+    fs.writeFileSync(
+      `./.workers/${name}/package.json`,
+      JSON.stringify(wpackageJson)
+    );
     execSync(`npm install`, {
       cwd: `./.workers/${name}`
     });
