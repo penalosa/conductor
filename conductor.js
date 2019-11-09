@@ -14,8 +14,8 @@ const cloudflare = require("./cloudflare");
 
 execSync("rm -rf ./.workers");
 
-let std = execSync(`npx @cloudflare/wrangler init --site my-static-site`);
-console.log(std.toString());
+let site = execSync(`npx @cloudflare/wrangler init --site my-static-site`);
+console.log(site.toString());
 
 fs.writeFileSync(
   `./wrangler.toml`,
@@ -33,7 +33,10 @@ zone_id = "${zone_id}"
 route = "https://${domain}/*"`
 );
 
-execSync(`npx @cloudflare/wrangler publish --env prod`);
+let sitePub = execSync(
+  `CF_API_KEY=${api_key} CF_EMAIL=${email} npx @cloudflare/wrangler publish --env prod`
+);
+console.log(sitePub.toString());
 
 fs.mkdirSync("./.workers");
 Promise.all(
