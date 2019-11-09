@@ -4,9 +4,8 @@ const { execSync } = require("child_process");
 const core = require("@actions/core");
 const github = require("@actions/github");
 const packageJson = JSON.parse(fs.readFileSync("./package.json", "utf8"));
-const [zone_id, account_id, api_key, email] = core
-  .getInput("cloudflare")
-  .split("::");
+const [zone_id, account_id, api_key, email] =
+  process.env.CF_TOKEN || core.getInput("cloudflare").split("::");
 
 const cloudflare = require("./cloudflare");
 
@@ -47,7 +46,7 @@ try {
         `./.workers/${name}/deps.js`,
         `module.exports = {
   ${Object.keys(func.dependencies)
-    .map(k => `"${k}": require(${k})`)
+    .map(k => `"${k}": require("${k}")`)
     .join(",\n")}
 }`
       );
