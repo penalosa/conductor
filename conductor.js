@@ -7,14 +7,10 @@ const zone_id = core.getInput("zone_id");
 const account_id = core.getInput("account_id");
 const api_key = core.getInput("api_key");
 const email = core.getInput("email");
-const build_command = core.getInput("build_command");
 
 const cloudflare = require("./cloudflare");
 
 execSync("rm -rf ./.workers");
-execSync("npm install");
-
-execSync(build_command);
 
 fs.mkdirSync("./.workers");
 Promise.all(
