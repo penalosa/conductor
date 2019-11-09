@@ -33,6 +33,41 @@ zone_id = "${zone_id}"
 route = "https://${domain}/*"`
 );
 
+fs.writeFileSync(
+  `./workers-site/index.js`,
+  `import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
+
+addEventListener("fetch", event => {
+  try {
+    event.respondWith(handleEvent(event));
+  } catch (e) {
+    event.respondWith(new Response("Internal Error", { status: 500 }));
+  }
+});
+
+async function handleEvent(event) {
+  try {
+    return await getAssetFromKV(event, {});
+  } catch (e) {
+    // if an error is thrown try to serve the asset at 404.html
+    try {
+      let notFoundResponse = await getAssetFromKV(event, {
+        mapRequestToAsset: req =>
+          new Request(\`\${new URL(req.url).origin}/index.html\`, req)
+      });
+
+      return new Response(notFoundResponse.body, {
+        ...notFoundResponse,
+        status: 404
+      });
+    } catch (e) {}
+
+    return new Response(e.message || e.toString(), { status: 500 });
+  }
+}
+`
+);
+
 let sitePub = execSync(
   `CF_API_KEY=${api_key} CF_EMAIL=${email} npx @cloudflare/wrangler publish --env prod`
 );
