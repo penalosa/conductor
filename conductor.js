@@ -125,9 +125,7 @@ ${namespaces
     if (!hasRecord.result.length) {
       console.error(`DNS record does not exist for ${name}.${func.domain}`);
       console.error(`Creating...`);
-      await api
-        .zone(account.domains[func.domain].zone_id)
-        .create(`${name}.${func.domain}`);
+      await api.zone(zone_id).create(`${name}.${func.domain}`);
       console.log(`Created`);
     }
 
